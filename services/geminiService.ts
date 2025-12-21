@@ -2,8 +2,6 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 import { decode, decodeAudioData } from "../utils/audioUtils";
 
-const API_KEY = process.env.API_KEY || "";
-
 export type VoiceSpeed = 'slow' | 'normal' | 'fast';
 
 export const generateStoryAudio = async (
@@ -11,28 +9,21 @@ export const generateStoryAudio = async (
   audioContext: AudioContext, 
   speed: VoiceSpeed = 'normal'
 ): Promise<AudioBuffer | null> => {
-  if (!API_KEY) {
-    console.error("API Key not found");
-    return null;
-  }
-
-  const ai = new GoogleGenAI({ apiKey: API_KEY });
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
-  let speedInstruction = "Mantieni un ritmo naturale, calmo e pacato.";
+  let mood = "in modo dolce, pacato e rassicurante";
   if (speed === 'slow') {
-    speedInstruction = "Leggi molto lentamente, con ampie pause tra le frasi per un effetto estremamente rilassante.";
+    mood = "molto lentamente, con lunghe pause rilassanti";
   } else if (speed === 'fast') {
-    speedInstruction = "Leggi con un ritmo leggermente più sostenuto e fluente, pur mantenendo la chiarezza.";
+    mood = "in modo fluido e chiaro, con un ritmo leggermente sostenuto";
   }
 
-  const prompt = `Agisci come una narratrice professionista. Leggi il seguente testo con una voce femminile dolce, rassicurante e chiara. 
-                  ${speedInstruction}
-                  Testo da leggere: "${text}"`;
+  const fullPrompt = `Leggi questa storia con una voce femminile ${mood}: ${text}`;
 
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
-      contents: [{ parts: [{ text: prompt }] }],
+      contents: [{ parts: [{ text: fullPrompt }] }],
       config: {
         responseModalities: [Modality.AUDIO],
         speechConfig: {
@@ -43,7 +34,8 @@ export const generateStoryAudio = async (
       },
     });
 
-    const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+    const audioPart = response.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+    const base64Audio = audioPart?.inlineData?.data;
 
     if (base64Audio) {
       const decodedBytes = decode(base64Audio);
@@ -57,8 +49,39 @@ export const generateStoryAudio = async (
     }
     
     return null;
+  } catch (error: any) {
+    console.error("Gemini TTS Error:", error);
+    if (error?.message?.includes("Requested entity was not found")) {
+      throw new Error("API_KEY_ERROR");
+    }
+    throw error;
+  }
+};
+
+export const transcribeAudio = async (base64Audio: string): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: [
+        {
+          parts: [
+            {
+              inlineData: {
+                mimeType: "audio/webm",
+                data: base64Audio,
+              },
+            },
+            { text: "Trascrivi questo audio fedelmente in testo italiano. Restituisci solo la trascrizione senza alcun commento aggiuntivo." },
+          ],
+        },
+      ],
+    });
+
+    return response.text || "";
   } catch (error) {
-    console.error("Error generating audio:", error);
+    console.error("Transcription Error:", error);
     throw error;
   }
 };
