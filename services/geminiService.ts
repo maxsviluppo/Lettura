@@ -5,13 +5,17 @@ import { decode, decodeAudioData } from "../utils/audioUtils";
 export type VoiceSpeed = 'slow' | 'normal' | 'fast';
 
 export const generateStoryAudio = async (
-  text: string, 
-  audioContext: AudioContext, 
-  speed: VoiceSpeed = 'normal'
+  text: string,
+  audioContext: AudioContext,
+  speed: VoiceSpeed = 'normal',
+  apiKey?: string
 ): Promise<AudioBuffer | null> => {
-  // Use process.env.API_KEY directly as per guidelines
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
+  // Use provided apiKey or fall back to env var
+  const key = apiKey || process.env.API_KEY;
+  if (!key) throw new Error("API_KEY_MISSING");
+
+  const ai = new GoogleGenAI({ apiKey: key });
+
   let mood = "in modo dolce, pacato e rassicurante";
   if (speed === 'slow') {
     mood = "molto lentamente, con lunghe pause rilassanti";
@@ -48,24 +52,27 @@ export const generateStoryAudio = async (
       );
       return audioBuffer;
     }
-    
+
     return null;
   } catch (error: any) {
     console.error("Gemini TTS Error:", error);
-    if (error?.message?.includes("Requested entity was not found")) {
+    if (error?.message?.includes("Requested entity was not found") || error?.status === 403) {
       throw new Error("API_KEY_ERROR");
     }
     throw error;
   }
 };
 
-export const transcribeAudio = async (base64Audio: string): Promise<string> => {
-  // Use process.env.API_KEY directly as per guidelines
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  
+export const transcribeAudio = async (base64Audio: string, apiKey?: string): Promise<string> => {
+  // Use provided apiKey or fall back to env var
+  const key = apiKey || process.env.API_KEY;
+  if (!key) throw new Error("API_KEY_MISSING");
+
+  const ai = new GoogleGenAI({ apiKey: key });
+
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.0-flash-exp",
       contents: [
         {
           parts: [
