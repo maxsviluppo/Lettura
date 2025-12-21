@@ -5,7 +5,8 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   define: {
-    // Assicura che process.env sia definito per la compatibilità con l'SDK Gemini
-    'process.env': process.env
+    // Vite defines these at compile time. 
+    // We use a check to avoid errors if process is undefined in certain environments
+    'process.env.API_KEY': JSON.stringify(process.env.API_KEY)
   }
 });

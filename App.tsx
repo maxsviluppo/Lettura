@@ -26,8 +26,9 @@ const App: React.FC = () => {
   // Verifica se l'utente ha selezionato una chiave personalizzata
   useEffect(() => {
     const checkKeyStatus = async () => {
-      if (window.aistudio && typeof window.aistudio.hasSelectedApiKey === 'function') {
-        const selected = await window.aistudio.hasSelectedApiKey();
+      const aistudio = (window as any).aistudio;
+      if (aistudio && typeof aistudio.hasSelectedApiKey === 'function') {
+        const selected = await aistudio.hasSelectedApiKey();
         setHasCustomKey(selected);
       }
     };
@@ -35,8 +36,9 @@ const App: React.FC = () => {
   }, []);
 
   const handleOpenKeyDialog = async () => {
-    if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
-      await window.aistudio.openSelectKey();
+    const aistudio = (window as any).aistudio;
+    if (aistudio && typeof aistudio.openSelectKey === 'function') {
+      await aistudio.openSelectKey();
       setHasCustomKey(true);
       setShowSettings(false);
       setError(null);
@@ -45,7 +47,8 @@ const App: React.FC = () => {
 
   const initAudioContext = () => {
     if (!audioContextRef.current) {
-      audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      audioContextRef.current = new AudioContextClass();
     }
     if (audioContextRef.current.state === 'suspended') {
       audioContextRef.current.resume();
@@ -239,7 +242,7 @@ const App: React.FC = () => {
       )}
 
       <header className="w-full flex justify-between items-start mb-12">
-        <div className="invisible p-2">⚙️</div> {/* Spacer per centrare il titolo */}
+        <div className="invisible p-2">⚙️</div>
         <div className="text-center">
           <div className="inline-block p-3 bg-rose-100 rounded-full mb-4">
             <svg className="w-8 h-8 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
