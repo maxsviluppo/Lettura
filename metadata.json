@@ -1,0 +1,7 @@
+{
+  "name": "Dolce Voce Narrante",
+  "description": "Un lettore di storie con una voce femminile dolce e pacata, alimentato dall'AI di Gemini per un'esperienza di lettura rilassante.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
