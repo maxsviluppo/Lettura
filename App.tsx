@@ -26,9 +26,9 @@ const App: React.FC = () => {
   // Verifica se l'utente ha selezionato una chiave personalizzata
   useEffect(() => {
     const checkKeyStatus = async () => {
-      const aistudio = (window as any).aistudio;
-      if (aistudio && typeof aistudio.hasSelectedApiKey === 'function') {
-        const selected = await aistudio.hasSelectedApiKey();
+      // Using window.aistudio directly now that env.d.ts is fixed
+      if (window.aistudio && typeof window.aistudio.hasSelectedApiKey === 'function') {
+        const selected = await window.aistudio.hasSelectedApiKey();
         setHasCustomKey(selected);
       }
     };
@@ -36,9 +36,9 @@ const App: React.FC = () => {
   }, []);
 
   const handleOpenKeyDialog = async () => {
-    const aistudio = (window as any).aistudio;
-    if (aistudio && typeof aistudio.openSelectKey === 'function') {
-      await aistudio.openSelectKey();
+    if (window.aistudio && typeof window.aistudio.openSelectKey === 'function') {
+      await window.aistudio.openSelectKey();
+      // Assume success as per guidelines to avoid race conditions
       setHasCustomKey(true);
       setShowSettings(false);
       setError(null);
@@ -47,7 +47,7 @@ const App: React.FC = () => {
 
   const initAudioContext = () => {
     if (!audioContextRef.current) {
-      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
       audioContextRef.current = new AudioContextClass();
     }
     if (audioContextRef.current.state === 'suspended') {
@@ -217,7 +217,7 @@ const App: React.FC = () => {
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-light text-stone-800 serif-font">Impostazioni API</h2>
               <button onClick={() => setShowSettings(false)} className="text-stone-400 hover:text-stone-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 18L18 6M6 6l12 12" /></svg>
               </button>
             </div>
             <div className="space-y-6">
@@ -315,7 +315,7 @@ const App: React.FC = () => {
 
         <div className="mt-8 flex flex-col gap-3">
           <label className="text-xs font-semibold text-stone-400 uppercase tracking-widest ml-1">Velocità della voce</label>
-          <div className="flex p-1 bg-stone-100 rounded-2xl w-full max-w-sm">
+          <div className="flex p-1 bg-stone-100 rounded-2xl w-full max-sm:w-full max-w-sm">
             {(['slow', 'normal', 'fast'] as VoiceSpeed[]).map((s) => (
               <button
                 key={s}

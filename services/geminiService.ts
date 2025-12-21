@@ -9,6 +9,7 @@ export const generateStoryAudio = async (
   audioContext: AudioContext, 
   speed: VoiceSpeed = 'normal'
 ): Promise<AudioBuffer | null> => {
+  // Use process.env.API_KEY directly as per guidelines
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   let mood = "in modo dolce, pacato e rassicurante";
@@ -59,6 +60,7 @@ export const generateStoryAudio = async (
 };
 
 export const transcribeAudio = async (base64Audio: string): Promise<string> => {
+  // Use process.env.API_KEY directly as per guidelines
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
   
   try {

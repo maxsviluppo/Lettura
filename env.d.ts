@@ -1,18 +1,23 @@
 
-interface Window {
-  // Use optional property to match other declarations in the environment and avoid modifier mismatch errors
-  aistudio?: {
+declare global {
+  // Define AIStudio interface to resolve conflict with subsequent property declarations
+  interface AIStudio {
     hasSelectedApiKey: () => Promise<boolean>;
     openSelectKey: () => Promise<void>;
-  };
-  webkitAudioContext: typeof AudioContext;
-}
-
-declare namespace NodeJS {
-  interface ProcessEnv {
-    API_KEY: string;
   }
+
+  interface Window {
+    aistudio?: AIStudio;
+    webkitAudioContext: typeof AudioContext;
+  }
+
+  namespace NodeJS {
+    interface ProcessEnv {
+      API_KEY: string;
+    }
+  }
+
+  // Removed var process redeclaration as it conflicts with existing Node.js types
 }
 
-// Removed 'declare var process' to fix 'Cannot redeclare block-scoped variable' error, 
-// as 'process' is already defined in the global scope by @types/node or the environment.
+export {};
