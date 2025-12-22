@@ -383,6 +383,28 @@ const App: React.FC = () => {
                   Ottieni una chiave gratuita qui
                 </a>
               </p>
+
+              {/* DevTools Section */}
+              <div className="pt-6 mt-6 border-t border-stone-200">
+                <div className="text-center space-y-3">
+                  <h3 className="text-sm font-semibold text-stone-700">DevTools</h3>
+                  <p className="text-xs text-stone-500 font-medium">BY CASTRO MASSIMO</p>
+                  <p className="text-[10px] text-stone-400 leading-relaxed px-2">
+                    Questa App è realizzata da DevTools by Castro Massimo.
+                    <br />
+                    Se hai bisogno di supporto, segnalazioni o di WebApp personalizzate contattaci.
+                  </p>
+                  <a
+                    href="mailto:castromassimo@gmail.com"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-rose-500 text-white text-xs font-medium rounded-lg hover:bg-rose-600 transition-all shadow-sm hover:shadow-md"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    castromassimo@gmail.com
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>

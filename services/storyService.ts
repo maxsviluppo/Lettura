@@ -12,6 +12,36 @@ export interface SavedStory {
 
 export class StoryService {
     private static readonly API_ENDPOINT = '/api/stories';
+    private static readonly STORAGE_KEY = 'lettura_stories';
+
+    // Verifica se l'API è disponibile (produzione) o usa localStorage (locale)
+    private static async isApiAvailable(): Promise<boolean> {
+        try {
+            const response = await fetch(`${this.API_ENDPOINT}?userId=test`, { method: 'HEAD' });
+            return response.ok || response.status === 400; // 400 è ok, significa che l'API esiste
+        } catch {
+            return false;
+        }
+    }
+
+    // LocalStorage fallback methods
+    private static getLocalStories(userId: string): SavedStory[] {
+        try {
+            const data = localStorage.getItem(`${this.STORAGE_KEY}_${userId}`);
+            return data ? JSON.parse(data) : [];
+        } catch (error) {
+            console.error('Error reading from localStorage:', error);
+            return [];
+        }
+    }
+
+    private static saveLocalStories(userId: string, stories: SavedStory[]): void {
+        try {
+            localStorage.setItem(`${this.STORAGE_KEY}_${userId}`, JSON.stringify(stories));
+        } catch (error) {
+            console.error('Error saving to localStorage:', error);
+        }
+    }
 
     // Recupera tutte le storie salvate
     static async getAllStories(userId: string): Promise<SavedStory[]> {
@@ -19,14 +49,14 @@ export class StoryService {
             const response = await fetch(`${this.API_ENDPOINT}?userId=${userId}`);
 
             if (!response.ok) {
-                console.error('Failed to fetch stories:', response.statusText);
-                return [];
+                console.log('API not available, using localStorage');
+                return this.getLocalStories(userId);
             }
 
             return await response.json();
         } catch (error) {
-            console.error('Error fetching stories:', error);
-            return [];
+            console.log('API error, falling back to localStorage:', error);
+            return this.getLocalStories(userId);
         }
     }
 
@@ -36,14 +66,15 @@ export class StoryService {
             const response = await fetch(`${this.API_ENDPOINT}?userId=${userId}&id=${storyId}`);
 
             if (!response.ok) {
-                console.error('Failed to fetch story:', response.statusText);
-                return null;
+                const stories = this.getLocalStories(userId);
+                return stories.find(s => s.id === storyId) || null;
             }
 
             return await response.json();
         } catch (error) {
-            console.error('Error fetching story:', error);
-            return null;
+            console.log('API error, falling back to localStorage:', error);
+            const stories = this.getLocalStories(userId);
+            return stories.find(s => s.id === storyId) || null;
         }
     }
 
@@ -59,15 +90,36 @@ export class StoryService {
             });
 
             if (!response.ok) {
-                console.error('Failed to save story:', response.statusText);
-                return null;
+                // Fallback a localStorage
+                const stories = this.getLocalStories(userId);
+                const newStory: SavedStory = {
+                    ...story,
+                    id: Date.now(), // Usa timestamp come ID
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    play_count: 0,
+                };
+                stories.unshift(newStory);
+                this.saveLocalStories(userId, stories);
+                return newStory;
             }
 
             const data = await response.json();
             return data.story;
         } catch (error) {
-            console.error('Error saving story:', error);
-            return null;
+            console.log('API error, falling back to localStorage:', error);
+            // Fallback a localStorage
+            const stories = this.getLocalStories(userId);
+            const newStory: SavedStory = {
+                ...story,
+                id: Date.now(),
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+                play_count: 0,
+            };
+            stories.unshift(newStory);
+            this.saveLocalStories(userId, stories);
+            return newStory;
         }
     }
 
@@ -83,14 +135,36 @@ export class StoryService {
             });
 
             if (!response.ok) {
-                console.error('Failed to update story:', response.statusText);
+                // Fallback a localStorage
+                const stories = this.getLocalStories(userId);
+                const index = stories.findIndex(s => s.id === storyId);
+                if (index !== -1) {
+                    stories[index] = {
+                        ...stories[index],
+                        ...story,
+                        updated_at: new Date().toISOString(),
+                    };
+                    this.saveLocalStories(userId, stories);
+                    return stories[index];
+                }
                 return null;
             }
 
             const data = await response.json();
             return data.story;
         } catch (error) {
-            console.error('Error updating story:', error);
+            console.log('API error, falling back to localStorage:', error);
+            const stories = this.getLocalStories(userId);
+            const index = stories.findIndex(s => s.id === storyId);
+            if (index !== -1) {
+                stories[index] = {
+                    ...stories[index],
+                    ...story,
+                    updated_at: new Date().toISOString(),
+                };
+                this.saveLocalStories(userId, stories);
+                return stories[index];
+            }
             return null;
         }
     }
@@ -103,14 +177,20 @@ export class StoryService {
             });
 
             if (!response.ok) {
-                console.error('Failed to delete story:', response.statusText);
-                return false;
+                // Fallback a localStorage
+                const stories = this.getLocalStories(userId);
+                const filtered = stories.filter(s => s.id !== storyId);
+                this.saveLocalStories(userId, filtered);
+                return true;
             }
 
             return true;
         } catch (error) {
-            console.error('Error deleting story:', error);
-            return false;
+            console.log('API error, falling back to localStorage:', error);
+            const stories = this.getLocalStories(userId);
+            const filtered = stories.filter(s => s.id !== storyId);
+            this.saveLocalStories(userId, filtered);
+            return true;
         }
     }
 
@@ -121,7 +201,14 @@ export class StoryService {
                 method: 'POST',
             });
         } catch (error) {
-            console.error('Error incrementing play count:', error);
+            // Fallback a localStorage
+            const stories = this.getLocalStories(userId);
+            const story = stories.find(s => s.id === storyId);
+            if (story) {
+                story.play_count = (story.play_count || 0) + 1;
+                story.last_played_at = new Date().toISOString();
+                this.saveLocalStories(userId, stories);
+            }
         }
     }
 }
