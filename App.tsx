@@ -323,7 +323,7 @@ const App: React.FC = () => {
         setError('Chiave API mancante. Inseriscila nelle impostazioni.');
         setShowSettings(true);
       } else {
-        setError('Errore del server. Riprova più tardi.');
+        setError(`Errore: ${err.message || 'Errore del server. Riprova.'}`);
       }
       console.error(err);
     } finally {
@@ -499,7 +499,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 md:py-16 flex flex-col items-center">
+    <div className="max-w-4xl mx-auto px-4 py-4 md:py-8 flex flex-col items-center">
       {/* Auth Modal - mostrato solo se l'utente non è loggato */}
       {!currentUser && (
         <AuthModal
@@ -707,52 +707,7 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Action Buttons Toolbar - Spostati qui sotto il titolo */}
-      <div className="w-full flex justify-center items-center gap-4 mb-6 z-30 relative animate-in fade-in slide-in-from-top-4 duration-500">
-        {isTranscribing && (
-          <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full text-sm text-[#D4A017] border border-[#F0E68C] shadow-md animate-pulse">
-            <div className="w-2 h-2 bg-[#D4A017] rounded-full animate-bounce" />
-            <span>Trascrizione...</span>
-          </div>
-        )}
 
-        <button
-          onClick={isRecording ? stopRecording : startRecording}
-          className={`p-4 rounded-full transition-all shadow-lg flex items-center justify-center group ${isRecording
-            ? 'bg-[#D4A017] text-white animate-pulse ring-4 ring-[#F0E68C] scale-110'
-            : 'bg-white text-stone-500 hover:text-[#D4A017] hover:bg-[#FFFDE7] hover:scale-105 border border-stone-100'
-            }`}
-          title={isRecording ? "Ferma registrazione" : "Dettatura vocale"}
-        >
-          <svg className="w-8 h-8 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
-            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-          </svg>
-        </button>
-
-        {text && !isRecording && (
-          <>
-            <button
-              onClick={openSaveDialog}
-              className="p-4 bg-white text-[#6D4C41] hover:text-[#5D4037] hover:bg-[#F5F2EA] rounded-full shadow-lg border border-[#D7CCC8] transition-all hover:scale-105 group"
-              title="Salva storia"
-            >
-              <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
-              </svg>
-            </button>
-            <button
-              onClick={clearText}
-              className="p-4 bg-white text-stone-400 hover:text-stone-600 rounded-full shadow-lg border border-stone-50 transition-all hover:scale-105 group"
-              title="Cancella tutto"
-            >
-              <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            </button>
-          </>
-        )}
-      </div>
 
       <main className="w-full bg-white rounded-3xl shadow-xl shadow-stone-200/50 p-6 md:p-10 border-none">
         {/* Contenitore Textarea con sfondo e decorazione e ombra NEON */}
@@ -774,6 +729,53 @@ const App: React.FC = () => {
           />
 
 
+        </div>
+
+        {/* Action Buttons - Spostati sotto il textarea */}
+        <div className="w-full flex justify-center items-center gap-4 mt-4 z-30 relative">
+          {isTranscribing && (
+            <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full text-sm text-[#D4A017] border border-[#F0E68C] shadow-md animate-pulse">
+              <div className="w-2 h-2 bg-[#D4A017] rounded-full animate-bounce" />
+              <span>Trascrizione...</span>
+            </div>
+          )}
+
+          <button
+            onClick={isRecording ? stopRecording : startRecording}
+            className={`p-4 rounded-full transition-all shadow-lg flex items-center justify-center group ${isRecording
+              ? 'bg-[#D4A017] text-white animate-pulse ring-4 ring-[#F0E68C] scale-110'
+              : 'bg-white text-stone-500 hover:text-[#D4A017] hover:bg-[#FFFDE7] hover:scale-105 border border-stone-100'
+              }`}
+            title={isRecording ? "Ferma registrazione" : "Dettatura vocale"}
+          >
+            <svg className="w-8 h-8 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+            </svg>
+          </button>
+
+          {text && !isRecording && (
+            <>
+              <button
+                onClick={openSaveDialog}
+                className="p-4 bg-white text-[#6D4C41] hover:text-[#5D4037] hover:bg-[#F5F2EA] rounded-full shadow-lg border border-[#D7CCC8] transition-all hover:scale-105 group"
+                title="Salva storia"
+              >
+                <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
+                </svg>
+              </button>
+              <button
+                onClick={clearText}
+                className="p-4 bg-white text-stone-400 hover:text-stone-600 rounded-full shadow-lg border border-stone-50 transition-all hover:scale-105 group"
+                title="Cancella tutto"
+              >
+                <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </>
+          )}
         </div>
 
         {error && (

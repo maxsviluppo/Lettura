@@ -6,7 +6,7 @@ export type VoiceSpeed = 'slow' | 'normal' | 'fast';
 
 // Chiave API Gemini Flash di base (generosa) - funziona senza configurazione
 // Gli utenti possono inserire la propria chiave personalizzata nelle impostazioni
-const DEFAULT_API_KEY = "AIzaSyCt6trYZGxOko-wjXeTgDHRywCpB6mlGsw"; // Chiave di base
+const DEFAULT_API_KEY = "AIzaSyDJakJIRdMYrkPHMFk0rVcBvOAp7KvMm9o"; // Chiave di base v2
 
 export const generateStoryAudio = async (
   text: string,
