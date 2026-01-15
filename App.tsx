@@ -553,7 +553,7 @@ const App: React.FC = () => {
                   value={tempApiKey}
                   onChange={(e) => setTempApiKey(e.target.value)}
                   placeholder="AIzaSy..."
-                  className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl mb-4 text-stone-700 focus:ring-2 focus:ring-rose-200 focus:border-rose-300 outline-none transition-all"
+                  className="w-full p-3 bg-[#FAF8F5] border border-stone-200 rounded-xl mb-4 text-stone-700 focus:ring-2 focus:ring-[#D7CCC8] focus:border-[#A1887F] outline-none transition-all"
                 />
                 <button
                   onClick={handleSaveKey}
@@ -565,7 +565,7 @@ const App: React.FC = () => {
               <p className="text-[10px] text-stone-400 text-center italic leading-relaxed">
                 La tua chiave viene salvata solo nel browser locale.
                 <br />
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-rose-500 hover:underline">
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-[#6D4C41] hover:underline">
                   Ottieni una chiave gratuita qui
                 </a>
               </p>
@@ -582,7 +582,7 @@ const App: React.FC = () => {
                   </p>
                   <a
                     href="mailto:castromassimo@gmail.com"
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-rose-500 text-white text-xs font-medium rounded-lg hover:bg-rose-600 transition-all shadow-sm hover:shadow-md"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#6D4C41] text-white text-xs font-medium rounded-lg hover:bg-[#5D4037] transition-all shadow-sm hover:shadow-md"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -598,7 +598,7 @@ const App: React.FC = () => {
                         e.preventDefault();
                         alert('Termini e Condizioni\n\nQuesta applicazione è fornita "così com\'è" senza garanzie di alcun tipo. L\'utente è responsabile della propria chiave API Google Gemini e dei contenuti generati.');
                       }}
-                      className="text-[10px] text-stone-400 hover:text-rose-500 transition-colors"
+                      className="text-[10px] text-stone-400 hover:text-[#6D4C41] transition-colors"
                     >
                       Termini e Condizioni
                     </a>
@@ -609,7 +609,7 @@ const App: React.FC = () => {
                         e.preventDefault();
                         alert('Privacy Policy\n\nI tuoi dati sono salvati localmente nel browser. La chiave API e le storie sono memorizzate solo sul tuo dispositivo. Non raccogliamo né condividiamo informazioni personali.');
                       }}
-                      className="text-[10px] text-stone-400 hover:text-rose-500 transition-colors"
+                      className="text-[10px] text-stone-400 hover:text-[#6D4C41] transition-colors"
                     >
                       Privacy Policy
                     </a>
@@ -651,7 +651,7 @@ const App: React.FC = () => {
         <div className="flex justify-start items-start">
           <button
             onClick={openLibrary}
-            className="p-2 md:p-3 rounded-full transition-all border hover:shadow-sm text-stone-600 hover:text-rose-500 hover:bg-rose-50 border-transparent hover:border-rose-100"
+            className="p-2 md:p-3 rounded-full transition-all border hover:shadow-sm text-stone-600 hover:text-[#6D4C41] hover:bg-[#F5F2EA] border-transparent hover:border-[#D7CCC8]"
             title="La Mia Biblioteca"
           >
             <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -707,13 +707,60 @@ const App: React.FC = () => {
         </div>
       </header>
 
+      {/* Action Buttons Toolbar - Spostati qui sotto il titolo */}
+      <div className="w-full flex justify-center items-center gap-4 mb-6 z-30 relative animate-in fade-in slide-in-from-top-4 duration-500">
+        {isTranscribing && (
+          <div className="flex items-center gap-2 px-4 py-2 bg-white rounded-full text-sm text-[#D4A017] border border-[#F0E68C] shadow-md animate-pulse">
+            <div className="w-2 h-2 bg-[#D4A017] rounded-full animate-bounce" />
+            <span>Trascrizione...</span>
+          </div>
+        )}
+
+        <button
+          onClick={isRecording ? stopRecording : startRecording}
+          className={`p-4 rounded-full transition-all shadow-lg flex items-center justify-center group ${isRecording
+            ? 'bg-[#D4A017] text-white animate-pulse ring-4 ring-[#F0E68C] scale-110'
+            : 'bg-white text-stone-500 hover:text-[#D4A017] hover:bg-[#FFFDE7] hover:scale-105 border border-stone-100'
+            }`}
+          title={isRecording ? "Ferma registrazione" : "Dettatura vocale"}
+        >
+          <svg className="w-8 h-8 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
+          </svg>
+        </button>
+
+        {text && !isRecording && (
+          <>
+            <button
+              onClick={openSaveDialog}
+              className="p-4 bg-white text-[#6D4C41] hover:text-[#5D4037] hover:bg-[#F5F2EA] rounded-full shadow-lg border border-[#D7CCC8] transition-all hover:scale-105 group"
+              title="Salva storia"
+            >
+              <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
+              </svg>
+            </button>
+            <button
+              onClick={clearText}
+              className="p-4 bg-white text-stone-400 hover:text-stone-600 rounded-full shadow-lg border border-stone-50 transition-all hover:scale-105 group"
+              title="Cancella tutto"
+            >
+              <svg className="w-6 h-6 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </>
+        )}
+      </div>
+
       <main className="w-full bg-white rounded-3xl shadow-xl shadow-stone-200/50 p-6 md:p-10 border-none">
         {/* Contenitore Textarea con sfondo e decorazione e ombra NEON */}
-        <div className="relative bg-stone-50 rounded-2xl overflow-hidden shadow-[0_10px_40px_-10px_rgba(244,63,94,0.3)] hover:shadow-[0_20px_50px_-12px_rgba(244,63,94,0.4)] transition-all duration-500">
+        <div className="relative bg-[#FAF8F5] rounded-2xl overflow-hidden shadow-[0_10px_40px_-10px_rgba(93,64,55,0.2)] hover:shadow-[0_20px_50px_-12px_rgba(93,64,55,0.3)] transition-all duration-500">
 
           {/* Icona libro decorativa in background - spostata ANCORA PIÙ a sinistra e MOLTO SOTTILE (6%) */}
-          <div className="absolute inset-y-0 -left-32 flex items-center pointer-events-none opacity-[0.06]">
-            <svg className="w-96 h-96 text-rose-300 transform -rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+          <div className="absolute inset-y-0 -left-32 flex items-center pointer-events-none opacity-[0.08]">
+            <svg className="w-96 h-96 text-[#8D6E63] transform -rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
@@ -726,54 +773,11 @@ const App: React.FC = () => {
             className="w-full min-h-[300px] p-6 text-xl serif-font text-stone-700 bg-transparent border-none outline-none focus:ring-0 resize-none transition-all placeholder:text-stone-300 scroll-smooth relative z-10"
           />
 
-          <div className="absolute top-4 right-4 flex items-center gap-2">
-            {isTranscribing && (
-              <div className="flex items-center gap-2 px-3 py-1 bg-white/80 rounded-full text-xs text-rose-500 border border-rose-100 shadow-sm animate-pulse">
-                <span>Trascrizione...</span>
-              </div>
-            )}
 
-            <button
-              onClick={isRecording ? stopRecording : startRecording}
-              className={`p-3 rounded-full transition-all shadow-md ${isRecording
-                ? 'bg-rose-500 text-white animate-pulse ring-4 ring-rose-100'
-                : 'bg-white text-stone-400 hover:text-rose-500 hover:bg-stone-50'
-                }`}
-              title={isRecording ? "Ferma registrazione" : "Dettatura vocale"}
-            >
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z" />
-                <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z" />
-              </svg>
-            </button>
-
-            {text && !isRecording && (
-              <>
-                <button
-                  onClick={openSaveDialog}
-                  className="p-3 bg-white text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-full shadow-sm border border-rose-100 transition-all"
-                  title="Salva storia"
-                >
-                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
-                  </svg>
-                </button>
-                <button
-                  onClick={clearText}
-                  className="p-3 bg-white text-stone-400 hover:text-stone-600 rounded-full shadow-sm border border-stone-50 transition-all"
-                  title="Cancella tutto"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                  </svg>
-                </button>
-              </>
-            )}
-          </div>
         </div>
 
         {error && (
-          <div className="mt-4 p-4 bg-rose-50 text-rose-600 rounded-xl text-sm border border-rose-100">
+          <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-xl text-sm border border-red-100">
             {error}
           </div>
         )}
@@ -786,7 +790,7 @@ const App: React.FC = () => {
                 key={s}
                 onClick={() => setSpeed(s)}
                 className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${speed === s
-                  ? 'bg-white text-rose-600 shadow-sm'
+                  ? 'bg-white text-[#6D4C41] shadow-sm'
                   : 'text-stone-500 hover:text-stone-700'
                   }`}
               >

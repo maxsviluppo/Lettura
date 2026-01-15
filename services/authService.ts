@@ -58,9 +58,27 @@ export class AuthService {
             const data = await response.json();
             this.setCurrentUser(data.user, data.token);
             return data.user;
-        } catch (error) {
-            // Fallback locale per sviluppo
-            console.log('API non disponibile, usando autenticazione locale');
+        } catch (error: any) {
+            const errorMessage = error.message || '';
+
+            // Se l'errore arriva dall'API (è un rifiuto esplicito), rilancialo.
+            // Il fallback deve attivarsi SOLO se l'API non è raggiungibile (es. "Failed to fetch").
+            const apiErrors = [
+                'Credenziali non valide',
+                'Username e password sono richiesti',
+                'Username, password ed email sono richiesti',
+                'Username già esistente',
+                'Errore del server',
+                'Method Not Allowed',
+                'Errore durante la registrazione'
+            ];
+
+            if (apiErrors.some(msg => errorMessage.includes(msg))) {
+                throw error;
+            }
+
+            // Fallback locale per sviluppo (solo se API non raggiungibile/offline)
+            console.log('API offline o errore di rete, tentativo fallback locale:', error);
 
             const localUsers = this.getLocalUsers();
             const user = localUsers.find(
@@ -68,7 +86,10 @@ export class AuthService {
             );
 
             if (!user) {
-                throw new Error('Username o password non corretti');
+                // Se manca anche in locale, lancia un errore generico di connessione o credenziali
+                // Ma se siamo qui, probabilmente è un problema di rete o l'utente non esiste in locale.
+                // Per evitare confusione, diciamo "Impossibile accedere offline".
+                throw new Error('Impossibile accedere. Verifica la connessione o le credenziali.');
             }
 
             const { password: _, ...userWithoutPassword } = user;
@@ -96,15 +117,27 @@ export class AuthService {
             const data = await response.json();
             this.setCurrentUser(data.user, data.token);
             return data.user;
-        } catch (error) {
+        } catch (error: any) {
+            const errorMessage = error.message || '';
+            const apiErrors = [
+                'Username già esistente',
+                'Username, password ed email sono richiesti',
+                'Errore durante la registrazione',
+                'Errore del server'
+            ];
+
+            if (apiErrors.some(msg => errorMessage.includes(msg))) {
+                throw error;
+            }
+
             // Fallback locale per sviluppo
-            console.log('API non disponibile, usando registrazione locale');
+            console.log('API offline, usando registrazione locale:', error);
 
             const localUsers = this.getLocalUsers();
 
             // Verifica se l'username esiste già
             if (localUsers.some(u => u.username === username)) {
-                throw new Error('Username già esistente');
+                throw new Error('Username già esistente (Locale)');
             }
 
             const newUser = {

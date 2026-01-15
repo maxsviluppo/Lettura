@@ -47,7 +47,7 @@ export const SaveDialog: React.FC<SaveDialogProps> = ({
                             value={title}
                             onChange={(e) => onTitleChange(e.target.value)}
                             placeholder="Es: La mia storia preferita"
-                            className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-700 focus:ring-2 focus:ring-rose-200 focus:border-rose-300 outline-none transition-all"
+                            className="w-full p-3 bg-[#FAF8F5] border border-stone-200 rounded-xl text-stone-700 focus:ring-2 focus:ring-[#F0E68C] focus:border-[#D4A017] outline-none transition-all"
                             autoFocus
                         />
                     </div>
@@ -61,7 +61,7 @@ export const SaveDialog: React.FC<SaveDialogProps> = ({
                             value={category}
                             onChange={(e) => onCategoryChange(e.target.value)}
                             placeholder="Es: Favole, Racconti, Poesie..."
-                            className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-700 focus:ring-2 focus:ring-rose-200 focus:border-rose-300 outline-none transition-all"
+                            className="w-full p-3 bg-[#FAF8F5] border border-stone-200 rounded-xl text-stone-700 focus:ring-2 focus:ring-[#F0E68C] focus:border-[#D4A017] outline-none transition-all"
                         />
                     </div>
 
@@ -74,7 +74,7 @@ export const SaveDialog: React.FC<SaveDialogProps> = ({
                         </button>
                         <button
                             onClick={onSave}
-                            className="flex-1 py-3 bg-rose-500 text-white rounded-xl font-medium hover:bg-rose-600 transition-all flex items-center justify-center gap-2"
+                            className="flex-1 py-3 bg-[#6D4C41] text-white rounded-xl font-medium hover:bg-[#5D4037] transition-all flex items-center justify-center gap-2"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />

@@ -17,14 +17,18 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLogin, onRegister, isLoa
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
+        const cleanUser = username.trim();
+        const cleanPass = password.trim();
+        const cleanEmail = email.trim();
+
         if (isLoginMode) {
-            onLogin(username, password);
+            onLogin(cleanUser, cleanPass);
         } else {
-            if (password !== confirmPassword) {
+            if (cleanPass !== confirmPassword.trim()) {
                 alert('Le password non corrispondono!');
                 return;
             }
-            onRegister(username, password, email);
+            onRegister(cleanUser, cleanPass, cleanEmail);
         }
     };
 
@@ -41,12 +45,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLogin, onRegister, isLoa
     };
 
     return (
-        <div className="fixed inset-0 bg-gradient-to-br from-rose-100 via-stone-50 to-rose-50 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-3xl p-8 md:p-12 max-w-md w-full shadow-2xl border border-stone-100 animate-in fade-in zoom-in duration-300">
                 {/* Logo/Icon */}
                 <div className="text-center mb-8">
-                    <div className="inline-block p-4 bg-rose-100 rounded-full mb-4">
-                        <svg className="w-12 h-12 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="inline-block p-4 bg-[#FFFDE7] rounded-full mb-4">
+                        <svg className="w-12 h-12 text-[#D4A017]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                         </svg>
                     </div>
@@ -72,7 +76,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLogin, onRegister, isLoa
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             placeholder="Il tuo username"
-                            className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-700 focus:ring-2 focus:ring-rose-200 focus:border-rose-300 outline-none transition-all"
+                            className="w-full p-3 bg-stone-50 border border-stone-200 rounded-xl text-stone-700 focus:ring-2 focus:ring-[#F0E68C] focus:border-[#D4A017] outline-none transition-all"
                             required
                             autoFocus
                         />
@@ -124,8 +128,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLogin, onRegister, isLoa
                         type="submit"
                         disabled={isLoading}
                         className={`w-full py-3 rounded-xl font-medium transition-all shadow-lg ${isLoading
-                                ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
-                                : 'bg-rose-500 text-white hover:bg-rose-600 active:scale-95'
+                            ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
+                            : 'bg-[#6D4C41] text-white hover:bg-[#5D4037] active:scale-95 shadow-md'
                             }`}
                     >
                         {isLoading ? (
@@ -149,7 +153,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLogin, onRegister, isLoa
                         {' '}
                         <button
                             onClick={toggleMode}
-                            className="text-rose-500 font-medium hover:text-rose-600 transition-colors"
+                            className="text-[#D4A017] font-medium hover:text-[#A67C00] transition-colors"
                         >
                             {isLoginMode ? 'Registrati' : 'Accedi'}
                         </button>

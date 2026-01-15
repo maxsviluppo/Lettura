@@ -87,7 +87,7 @@ export const LibraryPanel: React.FC<LibraryPanelProps> = ({
                         {/* Upload Button */}
                         <button
                             onClick={() => fileInputRef.current?.click()}
-                            className="p-2 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-all shadow-sm"
+                            className="p-2 bg-[#6D4C41] text-white rounded-full hover:bg-[#5D4037] transition-all shadow-sm"
                             title="Carica documento"
                         >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -123,7 +123,7 @@ export const LibraryPanel: React.FC<LibraryPanelProps> = ({
                         stories.map((story) => (
                             <div
                                 key={story.id}
-                                className="bg-stone-50 rounded-2xl p-4 border border-stone-100 hover:border-rose-200 hover:shadow-sm transition-all group"
+                                className="bg-[#FAF8F5] rounded-2xl p-4 border border-stone-100 hover:border-[#D4A017] hover:shadow-sm transition-all group"
                             >
                                 <div className="flex justify-between items-start gap-4">
                                     <div className="flex-1 min-w-0">
@@ -133,7 +133,7 @@ export const LibraryPanel: React.FC<LibraryPanelProps> = ({
                                                     type="text"
                                                     value={editTitle}
                                                     onChange={(e) => setEditTitle(e.target.value)}
-                                                    className="flex-1 px-3 py-1.5 bg-white border border-rose-300 rounded-lg text-stone-800 font-medium focus:ring-2 focus:ring-rose-200 outline-none"
+                                                    className="flex-1 px-3 py-1.5 bg-white border border-[#D4A017] rounded-lg text-stone-800 font-medium focus:ring-2 focus:ring-[#F0E68C] outline-none"
                                                     autoFocus
                                                     onKeyDown={(e) => {
                                                         if (e.key === 'Enter') saveRename(story.id!);
@@ -165,7 +165,7 @@ export const LibraryPanel: React.FC<LibraryPanelProps> = ({
                                             </h3>
                                         )}
                                         {story.category && (
-                                            <span className="inline-block mt-1 px-2 py-0.5 bg-rose-100 text-rose-600 text-xs rounded-full">
+                                            <span className="inline-block mt-1 px-2 py-0.5 bg-[#FFFDE7] text-[#8D6E63] text-xs rounded-full border border-[#FFF59D]">
                                                 {story.category}
                                             </span>
                                         )}
@@ -184,7 +184,7 @@ export const LibraryPanel: React.FC<LibraryPanelProps> = ({
                                     <div className="flex flex-col gap-2">
                                         <button
                                             onClick={() => onLoad(story)}
-                                            className="p-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600 transition-colors"
+                                            className="p-2 bg-[#6D4C41] text-white rounded-lg hover:bg-[#5D4037] transition-colors"
                                             title="Carica e leggi"
                                         >
                                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">

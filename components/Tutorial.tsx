@@ -115,9 +115,9 @@ export const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
                             <div
                                 key={index}
                                 className={`w-2 h-2 rounded-full transition-all ${index === currentStep
-                                    ? 'bg-rose-500 w-6'
+                                    ? 'bg-[#6D4C41] w-6'
                                     : index < currentStep
-                                        ? 'bg-rose-300'
+                                        ? 'bg-[#D7CCC8]'
                                         : 'bg-stone-200'
                                     }`}
                             />
@@ -134,7 +134,7 @@ export const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
                         </button>
                         <button
                             onClick={handleNext}
-                            className="flex-1 py-2 px-3 sm:px-4 bg-rose-500 text-white rounded-xl text-sm font-medium hover:bg-rose-600 transition-all"
+                            className="flex-1 py-2 px-3 sm:px-4 bg-[#6D4C41] text-white rounded-xl text-sm font-medium hover:bg-[#5D4037] transition-all"
                         >
                             {currentStep < TUTORIAL_STEPS.length - 1 ? 'Avanti' : 'Inizia!'}
                         </button>
