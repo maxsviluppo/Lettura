@@ -707,12 +707,14 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="w-full bg-white rounded-3xl shadow-xl shadow-stone-200/50 p-6 md:p-10 border border-stone-100">
-        <div className="relative">
-          {/* Icona libro decorativa in background */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5 overflow-hidden">
-            <svg className="w-64 h-64 text-stone-400 transform rotate-12" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z" />
+      <main className="w-full bg-white rounded-3xl shadow-xl shadow-stone-200/50 p-6 md:p-10 border-none">
+        {/* Contenitore Textarea con sfondo e decorazione e ombra NEON */}
+        <div className="relative bg-stone-50 rounded-2xl overflow-hidden shadow-[0_10px_40px_-10px_rgba(244,63,94,0.3)] hover:shadow-[0_20px_50px_-12px_rgba(244,63,94,0.4)] transition-all duration-500">
+
+          {/* Icona libro decorativa in background - spostata ANCORA PIÙ a sinistra e MOLTO SOTTILE (6%) */}
+          <div className="absolute inset-y-0 -left-32 flex items-center pointer-events-none opacity-[0.06]">
+            <svg className="w-96 h-96 text-rose-300 transform -rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth="1.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
             </svg>
           </div>
 
@@ -721,7 +723,7 @@ const App: React.FC = () => {
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Scrivi qui la tua storia o incolla un testo..."
-            className="w-full min-h-[300px] p-6 text-xl serif-font text-stone-700 bg-stone-50 rounded-2xl border-none focus:ring-2 focus:ring-rose-200 resize-none transition-all placeholder:text-stone-300 scroll-smooth relative z-10"
+            className="w-full min-h-[300px] p-6 text-xl serif-font text-stone-700 bg-transparent border-none outline-none focus:ring-0 resize-none transition-all placeholder:text-stone-300 scroll-smooth relative z-10"
           />
 
           <div className="absolute top-4 right-4 flex items-center gap-2">
