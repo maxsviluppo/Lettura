@@ -1,5 +1,9 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Configura il worker di PDF.js
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@5.4.530/build/pdf.worker.min.mjs`;
 import { generateStoryAudio, transcribeAudio, VoiceSpeed } from './services/geminiService';
 import { ApiKeyService } from './services/apiKeyService';
 import { StoryService, SavedStory } from './services/storyService';
@@ -453,32 +457,41 @@ const App: React.FC = () => {
   };
 
   // Funzione per estrarre testo da file
-  const extractTextFromFile = (file: File): Promise<string> => {
+  const extractTextFromFile = async (file: File): Promise<string> => {
+    // Gestione specifica per PDF
+    if (file.type === 'application/pdf') {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = '';
+        
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          // @ts-ignore - items has generic type in some versions
+          const pageText = textContent.items.map((item) => item.str).join(' ');
+          fullText += pageText + '\n\n';
+        }
+        
+        return fullText;
+      } catch (error) {
+        console.error('Errore lettura PDF:', error);
+        throw new Error('Impossibile leggere il file PDF');
+      }
+    }
+
+    // Gestione per altri set di caratteri e formati
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
 
       reader.onload = (e) => {
         const content = e.target?.result as string;
-
-        if (file.type === 'text/plain') {
-          resolve(content);
-        } else if (file.type === 'application/pdf') {
-          // Per PDF, mostriamo un messaggio che richiede testo semplice
-          showToastMessage('Per PDF, copia e incolla il testo manualmente.', 'info');
-          reject(new Error('PDF non supportato direttamente'));
-        } else {
-          // Per DOC/DOCX, proviamo a estrarre testo base
-          resolve(content);
-        }
+        resolve(content);
       };
 
       reader.onerror = () => reject(new Error('Errore lettura file'));
 
-      if (file.type === 'text/plain') {
-        reader.readAsText(file);
-      } else {
-        reader.readAsText(file);
-      }
+      reader.readAsText(file);
     });
   };
 
