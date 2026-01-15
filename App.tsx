@@ -3,10 +3,19 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { generateStoryAudio, transcribeAudio, VoiceSpeed } from './services/geminiService';
 import { ApiKeyService } from './services/apiKeyService';
 import { StoryService, SavedStory } from './services/storyService';
+import { AuthService, User } from './services/authService';
 import { LibraryPanel } from './components/LibraryPanel';
 import { SaveDialog } from './components/SaveDialog';
+import { Toast } from './components/Toast';
+import { AuthModal } from './components/AuthModal';
+import { Tutorial } from './components/Tutorial';
 
 const App: React.FC = () => {
+  // Auth states
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
   const [text, setText] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
@@ -26,6 +35,14 @@ const App: React.FC = () => {
   const [saveCategory, setSaveCategory] = useState<string>('');
   const [editingStory, setEditingStory] = useState<SavedStory | null>(null);
 
+  // Toast states
+  const [toastMessage, setToastMessage] = useState<string>('');
+  const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
+  const [showToast, setShowToast] = useState<boolean>(false);
+
+  // Tutorial state
+  const [showTutorial, setShowTutorial] = useState<boolean>(false);
+
   const audioContextRef = useRef<AudioContext | null>(null);
   const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -36,8 +53,14 @@ const App: React.FC = () => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
-  // Carica la chiave API dal database o localStorage all'avvio
+  // Verifica autenticazione e carica API key all'avvio
   useEffect(() => {
+    // Verifica se l'utente è già loggato
+    const user = AuthService.getCurrentUser();
+    if (user) {
+      setCurrentUser(user);
+    }
+
     const loadApiKey = async () => {
       try {
         // Prova prima dal database (se disponibile su Vercel)
@@ -94,6 +117,50 @@ const App: React.FC = () => {
         console.log('Database non disponibile');
       }
     }
+  };
+
+  // Auth Functions
+  const handleLogin = async (username: string, password: string) => {
+    setIsAuthLoading(true);
+    setAuthError(null);
+
+    try {
+      const user = await AuthService.login(username, password);
+      setCurrentUser(user);
+      showToastMessage(`Benvenuto, ${user.username}!`, 'success');
+    } catch (error: any) {
+      setAuthError(error.message || 'Errore durante il login');
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const handleRegister = async (username: string, password: string, email: string) => {
+    setIsAuthLoading(true);
+    setAuthError(null);
+
+    try {
+      const user = await AuthService.register(username, password, email);
+      setCurrentUser(user);
+      showToastMessage(`Account creato! Benvenuto, ${user.username}!`, 'success');
+
+      // Mostra il tutorial solo per nuovi utenti
+      setTimeout(() => {
+        setShowTutorial(true);
+      }, 1000); // Piccolo delay per far vedere il toast
+    } catch (error: any) {
+      setAuthError(error.message || 'Errore durante la registrazione');
+    } finally {
+      setIsAuthLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    AuthService.logout();
+    setCurrentUser(null);
+    setText('');
+    handleStop();
+    showToastMessage('Logout effettuato con successo', 'info');
   };
 
   const initAudioContext = () => {
@@ -271,6 +338,13 @@ const App: React.FC = () => {
     setError(null);
   };
 
+  // Toast helper
+  const showToastMessage = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    setToastMessage(message);
+    setToastType(type);
+    setShowToast(true);
+  };
+
   // Library Functions
   const loadLibrary = async () => {
     const userId = ApiKeyService.getUserId();
@@ -280,7 +354,7 @@ const App: React.FC = () => {
 
   const handleSaveStory = async () => {
     if (!saveTitle.trim() || !text.trim()) {
-      setError('Inserisci un titolo e un testo per salvare.');
+      showToastMessage('Inserisci un titolo e un testo per salvare.', 'error');
       return;
     }
 
@@ -291,25 +365,32 @@ const App: React.FC = () => {
       category: saveCategory.trim() || undefined,
     };
 
-    if (editingStory) {
-      // Aggiorna storia esistente
-      await StoryService.updateStory(userId, editingStory.id!, story);
-    } else {
-      // Salva nuova storia
-      await StoryService.saveStory(userId, story);
-    }
+    try {
+      if (editingStory) {
+        // Aggiorna storia esistente
+        await StoryService.updateStory(userId, editingStory.id!, story);
+        showToastMessage('Storia aggiornata con successo!', 'success');
+      } else {
+        // Salva nuova storia
+        await StoryService.saveStory(userId, story);
+        showToastMessage('Storia salvata con successo!', 'success');
+      }
 
-    setSaveTitle('');
-    setSaveCategory('');
-    setEditingStory(null);
-    setShowSaveDialog(false);
-    loadLibrary();
+      setSaveTitle('');
+      setSaveCategory('');
+      setEditingStory(null);
+      setShowSaveDialog(false);
+      loadLibrary();
+    } catch (error) {
+      showToastMessage('Errore durante il salvataggio.', 'error');
+    }
   };
 
   const handleLoadStory = (story: SavedStory) => {
     setText(story.content);
     setShowLibrary(false);
     if (textareaRef.current) textareaRef.current.scrollTop = 0;
+    showToastMessage(`Storia "${story.title}" caricata!`, 'success');
   };
 
   const handleEditStory = (story: SavedStory) => {
@@ -322,16 +403,88 @@ const App: React.FC = () => {
   };
 
   const handleDeleteStory = async (storyId: number) => {
-    if (!confirm('Sei sicuro di voler eliminare questa storia?')) return;
-
     const userId = ApiKeyService.getUserId();
-    await StoryService.deleteStory(userId, storyId);
-    loadLibrary();
+
+    try {
+      await StoryService.deleteStory(userId, storyId);
+      showToastMessage('Storia eliminata con successo!', 'success');
+      loadLibrary();
+    } catch (error) {
+      showToastMessage('Errore durante l\'eliminazione.', 'error');
+    }
+  };
+
+  const handleRenameStory = async (storyId: number, newTitle: string) => {
+    const userId = ApiKeyService.getUserId();
+
+    try {
+      await StoryService.updateStory(userId, storyId, { title: newTitle });
+      showToastMessage('Nome modificato con successo!', 'success');
+      loadLibrary();
+    } catch (error) {
+      showToastMessage('Errore durante la modifica del nome.', 'error');
+    }
+  };
+
+  const handleUploadDocument = async (file: File) => {
+    try {
+      showToastMessage('Caricamento documento...', 'info');
+
+      const text = await extractTextFromFile(file);
+
+      if (!text || text.trim().length === 0) {
+        showToastMessage('Impossibile estrarre testo dal documento.', 'error');
+        return;
+      }
+
+      const userId = ApiKeyService.getUserId();
+      const story: SavedStory = {
+        title: file.name.replace(/\.[^/.]+$/, ''), // Rimuove estensione
+        content: text,
+        category: 'Documento',
+      };
+
+      await StoryService.saveStory(userId, story);
+      showToastMessage(`Documento "${file.name}" caricato con successo!`, 'success');
+      loadLibrary();
+    } catch (error) {
+      showToastMessage('Errore durante il caricamento del documento.', 'error');
+    }
+  };
+
+  // Funzione per estrarre testo da file
+  const extractTextFromFile = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        const content = e.target?.result as string;
+
+        if (file.type === 'text/plain') {
+          resolve(content);
+        } else if (file.type === 'application/pdf') {
+          // Per PDF, mostriamo un messaggio che richiede testo semplice
+          showToastMessage('Per PDF, copia e incolla il testo manualmente.', 'info');
+          reject(new Error('PDF non supportato direttamente'));
+        } else {
+          // Per DOC/DOCX, proviamo a estrarre testo base
+          resolve(content);
+        }
+      };
+
+      reader.onerror = () => reject(new Error('Errore lettura file'));
+
+      if (file.type === 'text/plain') {
+        reader.readAsText(file);
+      } else {
+        reader.readAsText(file);
+      }
+    });
   };
 
   const openSaveDialog = () => {
     if (!text.trim()) {
-      setError('Scrivi un testo prima di salvarlo.');
+      showToastMessage('Scrivi un testo prima di salvarlo.', 'error');
       return;
     }
     setEditingStory(null);
@@ -347,6 +500,21 @@ const App: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-8 md:py-16 flex flex-col items-center">
+      {/* Auth Modal - mostrato solo se l'utente non è loggato */}
+      {!currentUser && (
+        <AuthModal
+          onLogin={handleLogin}
+          onRegister={handleRegister}
+          isLoading={isAuthLoading}
+          error={authError}
+        />
+      )}
+
+      {/* Tutorial - mostrato solo al primo accesso */}
+      {showTutorial && currentUser && (
+        <Tutorial onComplete={() => setShowTutorial(false)} />
+      )}
+
       {/* Settings Panel */}
       {showSettings && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setShowSettings(false)}>
@@ -403,6 +571,31 @@ const App: React.FC = () => {
                     </svg>
                     castromassimo@gmail.com
                   </a>
+
+                  {/* Termini e Privacy */}
+                  <div className="flex items-center justify-center gap-3 mt-4 pt-4 border-t border-stone-100">
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        alert('Termini e Condizioni\n\nQuesta applicazione è fornita "così com\'è" senza garanzie di alcun tipo. L\'utente è responsabile della propria chiave API Google Gemini e dei contenuti generati.');
+                      }}
+                      className="text-[10px] text-stone-400 hover:text-rose-500 transition-colors"
+                    >
+                      Termini e Condizioni
+                    </a>
+                    <span className="text-stone-300">•</span>
+                    <a
+                      href="#"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        alert('Privacy Policy\n\nI tuoi dati sono salvati localmente nel browser. La chiave API e le storie sono memorizzate solo sul tuo dispositivo. Non raccogliamo né condividiamo informazioni personali.');
+                      }}
+                      className="text-[10px] text-stone-400 hover:text-rose-500 transition-colors"
+                    >
+                      Privacy Policy
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
@@ -418,6 +611,8 @@ const App: React.FC = () => {
           onLoad={handleLoadStory}
           onEdit={handleEditStory}
           onDelete={handleDeleteStory}
+          onUploadDocument={handleUploadDocument}
+          onRename={handleRenameStory}
         />
       )}
 
@@ -433,40 +628,67 @@ const App: React.FC = () => {
         onCategoryChange={setSaveCategory}
       />
 
-      <header className="w-full flex justify-between items-start mb-12">
+      <header className="w-full grid grid-cols-3 items-start mb-8 md:mb-12 gap-2 md:gap-4">
         {/* Left: Library Button */}
-        <button
-          onClick={openLibrary}
-          className="p-3 rounded-full transition-all border hover:shadow-sm text-stone-600 hover:text-rose-500 hover:bg-rose-50 border-transparent hover:border-rose-100"
-          title="La Mia Biblioteca"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-          </svg>
-        </button>
+        <div className="flex justify-start items-start">
+          <button
+            onClick={openLibrary}
+            className="p-2 md:p-3 rounded-full transition-all border hover:shadow-sm text-stone-600 hover:text-rose-500 hover:bg-rose-50 border-transparent hover:border-rose-100"
+            title="La Mia Biblioteca"
+          >
+            <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+          </button>
+        </div>
 
-        {/* Center: Title */}
+        {/* Center: Title - sempre centrato */}
         <div className="text-center">
-          <div className="inline-block p-3 bg-rose-100 rounded-full mb-4">
-            <svg className="w-8 h-8 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="inline-block p-2 md:p-3 bg-rose-100 rounded-full mb-2 md:mb-4">
+            <svg className="w-6 h-6 md:w-8 md:h-8 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
             </svg>
           </div>
-          <h1 className="serif-font text-4xl md:text-5xl font-light text-stone-800 mb-2">Dolce Voce Narrante</h1>
-          <p className="text-stone-500 font-light text-lg">Trasforma le tue parole in una narrazione serena</p>
+          <h1 className="serif-font text-2xl md:text-4xl lg:text-5xl font-light text-stone-800 mb-1 md:mb-2 whitespace-nowrap">
+            Dolce Voce <span className="font-semibold">Narrante</span>
+          </h1>
+          <p className="text-stone-500 font-light text-sm md:text-lg hidden sm:block">Trasforma le tue parole in una narrazione serena</p>
         </div>
 
-        {/* Right: Settings Button */}
-        <button
-          onClick={() => setShowSettings(true)}
-          className={`p-3 rounded-full transition-all border hover:shadow-sm ${customApiKey
-            ? 'text-green-500 bg-green-50 border-green-100 hover:bg-green-100'
-            : 'text-stone-400 hover:text-stone-600 hover:bg-white border-transparent hover:border-stone-100'
-            }`}
-          title="Impostazioni Account"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-        </button>
+        {/* Right: User Info & Settings */}
+        <div className="flex items-start justify-end gap-1 md:gap-2">
+          {currentUser && (
+            <>
+              <div className="text-right mr-1 md:mr-2 hidden md:block">
+                <p className="text-sm font-medium text-stone-700">{currentUser.username}</p>
+                <p className="text-xs text-stone-400">{currentUser.email}</p>
+              </div>
+              {/* Mobile: solo username */}
+              <div className="text-right mr-1 block md:hidden">
+                <p className="text-xs font-medium text-stone-700">{currentUser.username}</p>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="p-2 md:p-3 rounded-full transition-all border hover:shadow-sm text-red-500 hover:text-red-600 hover:bg-red-50 border-transparent hover:border-red-100"
+                title="Logout"
+              >
+                <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            </>
+          )}
+          <button
+            onClick={() => setShowSettings(true)}
+            className={`p-2 md:p-3 rounded-full transition-all border hover:shadow-sm ${customApiKey
+              ? 'text-green-500 bg-green-50 border-green-100 hover:bg-green-100'
+              : 'text-stone-400 hover:text-stone-600 hover:bg-white border-transparent hover:border-stone-100'
+              }`}
+            title="Impostazioni API"
+          >
+            <svg className="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+          </button>
+        </div>
       </header>
 
       <main className="w-full bg-white rounded-3xl shadow-xl shadow-stone-200/50 p-6 md:p-10 border border-stone-100">
@@ -507,8 +729,8 @@ const App: React.FC = () => {
                   className="p-3 bg-white text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-full shadow-sm border border-rose-100 transition-all"
                   title="Salva storia"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z" />
                   </svg>
                 </button>
                 <button
@@ -531,9 +753,9 @@ const App: React.FC = () => {
           </div>
         )}
 
-        <div className="mt-8 flex flex-col gap-3">
-          <label className="text-xs font-semibold text-stone-400 uppercase tracking-widest ml-1">Velocità della voce</label>
-          <div className="flex p-1 bg-stone-100 rounded-2xl w-full max-sm:w-full max-w-sm">
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <label className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Velocità della voce</label>
+          <div className="flex p-1 bg-stone-100 rounded-2xl w-full max-w-sm mx-auto">
             {(['slow', 'normal', 'fast'] as VoiceSpeed[]).map((s) => (
               <button
                 key={s}
@@ -549,7 +771,9 @@ const App: React.FC = () => {
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col md:flex-row items-center justify-between gap-6">
+        {/* Status e Pulsanti Centrati */}
+        <div className="mt-10 flex flex-col items-center justify-center gap-6">
+          {/* Status Indicator */}
           <div className="flex items-center gap-4">
             <div className={`w-3 h-3 rounded-full ${isPlaying || isRecording ? 'bg-green-400 animate-pulse' : 'bg-stone-300'}`}></div>
             <span className="text-stone-500 text-sm font-medium uppercase tracking-wider">
@@ -557,11 +781,12 @@ const App: React.FC = () => {
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* Pulsante Principale Centrato */}
+          <div className="flex items-center justify-center">
             {isPlaying ? (
               <button
                 onClick={handleStop}
-                className="group flex items-center gap-2 px-8 py-4 bg-stone-800 text-white rounded-full font-medium hover:bg-stone-700 transition-all active:scale-95 shadow-lg"
+                className="group flex items-center gap-2 px-10 py-4 bg-stone-800 text-white rounded-full font-medium hover:bg-stone-700 transition-all active:scale-95 shadow-lg"
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clipRule="evenodd" />
@@ -573,7 +798,7 @@ const App: React.FC = () => {
                 onClick={handleReadStory}
                 disabled={isGenerating || !text.trim() || isRecording}
                 className={`
-                  flex items-center gap-2 px-10 py-4 rounded-full font-medium transition-all active:scale-95 shadow-lg
+                  flex items-center gap-2 px-12 py-4 rounded-full font-medium transition-all active:scale-95 shadow-lg
                   ${(isGenerating || !text.trim() || isRecording)
                     ? 'bg-stone-200 text-stone-400 cursor-not-allowed'
                     : 'bg-rose-500 text-white hover:bg-rose-600 shadow-rose-200'
@@ -608,6 +833,15 @@ const App: React.FC = () => {
           <p className="mt-2 text-[10px] text-green-500 font-medium">Chiave API Configurata</p>
         )}
       </footer>
+
+      {/* Toast Notification */}
+      {showToast && (
+        <Toast
+          message={toastMessage}
+          type={toastType}
+          onClose={() => setShowToast(false)}
+        />
+      )}
     </div>
   );
 };
