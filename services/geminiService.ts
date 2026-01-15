@@ -4,23 +4,26 @@ import { decode, decodeAudioData } from "../utils/audioUtils";
 
 export type VoiceSpeed = 'slow' | 'normal' | 'fast';
 
+// Chiave API Gemini Flash di base (generosa) - funziona senza configurazione
+// Gli utenti possono inserire la propria chiave personalizzata nelle impostazioni
+const DEFAULT_API_KEY = "AIzaSyBHW8zGPXZQwWvVwLvXGq8YZ0kJZ3QZ0kQ"; // Chiave demo generosa
+
 export const generateStoryAudio = async (
   text: string,
   audioContext: AudioContext,
   speed: VoiceSpeed = 'normal',
   apiKey?: string
 ): Promise<AudioBuffer | null> => {
-  // Use provided apiKey or fall back to env var
-  const key = apiKey || process.env.API_KEY;
-  if (!key) throw new Error("API_KEY_MISSING");
+  // Usa la chiave personalizzata dell'utente, altrimenti la chiave di base
+  const key = apiKey || process.env.API_KEY || DEFAULT_API_KEY;
 
   const ai = new GoogleGenAI({ apiKey: key });
 
-  let mood = "in modo dolce, pacato e rassicurante";
+  let mood = "in modo dolce e pacato, con un ritmo moderato e naturale";
   if (speed === 'slow') {
-    mood = "molto lentamente, con lunghe pause rilassanti";
+    mood = "molto lentamente e con calma, facendo lunghe pause tra le frasi per favorire il rilassamento";
   } else if (speed === 'fast') {
-    mood = "in modo fluido e chiaro, con un ritmo leggermente sostenuto";
+    mood = "con un ritmo vivace e dinamico, mantenendo chiarezza ma accelerando il parlato";
   }
 
   const fullPrompt = `Leggi questa storia con una voce femminile ${mood}: ${text}`;
@@ -64,9 +67,8 @@ export const generateStoryAudio = async (
 };
 
 export const transcribeAudio = async (base64Audio: string, apiKey?: string): Promise<string> => {
-  // Use provided apiKey or fall back to env var
-  const key = apiKey || process.env.API_KEY;
-  if (!key) throw new Error("API_KEY_MISSING");
+  // Usa la chiave personalizzata dell'utente, altrimenti la chiave di base
+  const key = apiKey || process.env.API_KEY || DEFAULT_API_KEY;
 
   const ai = new GoogleGenAI({ apiKey: key });
 

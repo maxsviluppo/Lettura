@@ -526,10 +526,28 @@ const App: React.FC = () => {
               </button>
             </div>
             <div className="space-y-6">
+              {/* Info Box - Chiave di Base */}
+              <div className="bg-green-50 border border-green-100 rounded-xl p-4">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <h3 className="text-sm font-semibold text-green-700 mb-1">✨ L'app è già pronta!</h3>
+                    <p className="text-xs text-green-600 leading-relaxed">
+                      Usiamo una chiave API Gemini Flash generosa di base. Puoi usare l'app subito senza configurare nulla!
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label className="text-sm text-stone-500 mb-2 font-light block">
-                  Inserisci la tua Google Gemini API Key
+                  Chiave API Personalizzata (Opzionale)
                 </label>
+                <p className="text-xs text-stone-400 mb-3">
+                  Vuoi usare la tua chiave personale? Inseriscila qui per avere il pieno controllo.
+                </p>
                 <input
                   type="password"
                   value={tempApiKey}
@@ -643,11 +661,9 @@ const App: React.FC = () => {
         </div>
 
         {/* Center: Title - sempre centrato */}
-        <div className="text-center">
-          <div className="inline-block p-2 md:p-3 bg-rose-100 rounded-full mb-2 md:mb-4">
-            <svg className="w-6 h-6 md:w-8 md:h-8 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-            </svg>
+        <div className="text-center flex flex-col items-center">
+          <div className="inline-block mb-2 md:mb-4">
+            <img src="/logo.png" alt="Dolce Voce Narrante" className="w-12 h-12 md:w-16 md:h-16 rounded-2xl mx-auto" />
           </div>
           <h1 className="serif-font text-2xl md:text-4xl lg:text-5xl font-light text-stone-800 mb-1 md:mb-2 whitespace-nowrap">
             Dolce Voce <span className="font-semibold">Narrante</span>
@@ -693,12 +709,19 @@ const App: React.FC = () => {
 
       <main className="w-full bg-white rounded-3xl shadow-xl shadow-stone-200/50 p-6 md:p-10 border border-stone-100">
         <div className="relative">
+          {/* Icona libro decorativa in background */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5 overflow-hidden">
+            <svg className="w-64 h-64 text-stone-400 transform rotate-12" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M21 5c-1.11-.35-2.33-.5-3.5-.5-1.95 0-4.05.4-5.5 1.5-1.45-1.1-3.55-1.5-5.5-1.5S2.45 4.9 1 6v14.65c0 .25.25.5.5.5.1 0 .15-.05.25-.05C3.1 20.45 5.05 20 6.5 20c1.95 0 4.05.4 5.5 1.5 1.35-.85 3.8-1.5 5.5-1.5 1.65 0 3.35.3 4.75 1.05.1.05.15.05.25.05.25 0 .5-.25.5-.5V6c-.6-.45-1.25-.75-2-1zm0 13.5c-1.1-.35-2.3-.5-3.5-.5-1.7 0-4.15.65-5.5 1.5V8c1.35-.85 3.8-1.5 5.5-1.5 1.2 0 2.4.15 3.5.5v11.5z" />
+            </svg>
+          </div>
+
           <textarea
             ref={textareaRef}
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Scrivi qui la tua storia o incolla un testo..."
-            className="w-full min-h-[300px] p-6 text-xl serif-font text-stone-700 bg-stone-50 rounded-2xl border-none focus:ring-2 focus:ring-rose-200 resize-none transition-all placeholder:text-stone-300 scroll-smooth"
+            className="w-full min-h-[300px] p-6 text-xl serif-font text-stone-700 bg-stone-50 rounded-2xl border-none focus:ring-2 focus:ring-rose-200 resize-none transition-all placeholder:text-stone-300 scroll-smooth relative z-10"
           />
 
           <div className="absolute top-4 right-4 flex items-center gap-2">
@@ -827,10 +850,9 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <footer className="mt-12 text-stone-400 text-sm text-center">
-        <p>Progettato per momenti di relax e ascolto.</p>
+      <footer className="mt-12 text-center">
         {customApiKey && (
-          <p className="mt-2 text-[10px] text-green-500 font-medium">Chiave API Configurata</p>
+          <p className="text-[10px] text-green-500 font-medium">Chiave API Configurata</p>
         )}
       </footer>
 

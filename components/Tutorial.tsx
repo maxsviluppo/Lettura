@@ -91,57 +91,57 @@ export const Tutorial: React.FC<TutorialProps> = ({ onComplete }) => {
             {/* Overlay scuro */}
             <div className="fixed inset-0 bg-black/60 z-[60] animate-in fade-in duration-300" />
 
-            {/* Tooltip fumetto */}
-            <div className={`${getTooltipPosition()} z-[70] max-w-sm w-full mx-4 animate-in zoom-in fade-in duration-300`}>
-                <div className="bg-white rounded-2xl shadow-2xl p-6 relative">
+            {/* Tooltip fumetto - responsive */}
+            <div className={`${getTooltipPosition()} z-[70] max-w-sm w-[90%] sm:w-full px-4 animate-in zoom-in fade-in duration-300`}>
+                <div className="bg-white rounded-2xl shadow-2xl p-5 sm:p-6 relative">
                     {/* Freccia del fumetto */}
                     {step.position !== 'center' && (
                         <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-[12px] border-l-transparent border-r-[12px] border-r-transparent border-t-[12px] border-t-white" />
                     )}
 
                     {/* Contenuto */}
-                    <div className="text-center mb-6">
-                        <h3 className="text-2xl font-light serif-font text-stone-800 mb-3">
+                    <div className="text-center mb-5 sm:mb-6">
+                        <h3 className="text-xl sm:text-2xl font-light serif-font text-stone-800 mb-2 sm:mb-3">
                             {step.title}
                         </h3>
-                        <p className="text-stone-600 text-sm leading-relaxed">
+                        <p className="text-stone-600 text-xs sm:text-sm leading-relaxed">
                             {step.description}
                         </p>
                     </div>
 
                     {/* Progress dots */}
-                    <div className="flex justify-center gap-2 mb-6">
+                    <div className="flex justify-center gap-2 mb-5 sm:mb-6">
                         {TUTORIAL_STEPS.map((_, index) => (
                             <div
                                 key={index}
                                 className={`w-2 h-2 rounded-full transition-all ${index === currentStep
-                                        ? 'bg-rose-500 w-6'
-                                        : index < currentStep
-                                            ? 'bg-rose-300'
-                                            : 'bg-stone-200'
+                                    ? 'bg-rose-500 w-6'
+                                    : index < currentStep
+                                        ? 'bg-rose-300'
+                                        : 'bg-stone-200'
                                     }`}
                             />
                         ))}
                     </div>
 
                     {/* Buttons */}
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 sm:gap-3">
                         <button
                             onClick={handleSkip}
-                            className="flex-1 py-2 px-4 bg-stone-100 text-stone-600 rounded-xl font-medium hover:bg-stone-200 transition-all"
+                            className="flex-1 py-2 px-3 sm:px-4 bg-stone-100 text-stone-600 rounded-xl text-sm font-medium hover:bg-stone-200 transition-all"
                         >
                             Salta
                         </button>
                         <button
                             onClick={handleNext}
-                            className="flex-1 py-2 px-4 bg-rose-500 text-white rounded-xl font-medium hover:bg-rose-600 transition-all"
+                            className="flex-1 py-2 px-3 sm:px-4 bg-rose-500 text-white rounded-xl text-sm font-medium hover:bg-rose-600 transition-all"
                         >
                             {currentStep < TUTORIAL_STEPS.length - 1 ? 'Avanti' : 'Inizia!'}
                         </button>
                     </div>
 
                     {/* Step counter */}
-                    <p className="text-center text-xs text-stone-400 mt-4">
+                    <p className="text-center text-xs text-stone-400 mt-3 sm:mt-4">
                         {currentStep + 1} di {TUTORIAL_STEPS.length}
                     </p>
                 </div>
