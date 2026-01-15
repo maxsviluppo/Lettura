@@ -51,8 +51,13 @@ export class AuthService {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Credenziali non valide');
+                let errorData;
+                try {
+                    errorData = await response.json();
+                } catch {
+                    throw new Error('API_OFFLINE');
+                }
+                throw new Error(errorData.error || errorData.message || 'Credenziali non valide');
             }
 
             const data = await response.json();
@@ -67,10 +72,7 @@ export class AuthService {
                 'Credenziali non valide',
                 'Username e password sono richiesti',
                 'Username, password ed email sono richiesti',
-                'Username già esistente',
-                'Errore del server',
-                'Method Not Allowed',
-                'Errore durante la registrazione'
+                'Username già esistente'
             ];
 
             if (apiErrors.some(msg => errorMessage.includes(msg))) {
@@ -110,8 +112,13 @@ export class AuthService {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Errore durante la registrazione');
+                let errorData;
+                try {
+                    errorData = await response.json();
+                } catch {
+                    throw new Error('API_OFFLINE');
+                }
+                throw new Error(errorData.error || errorData.message || 'Errore durante la registrazione');
             }
 
             const data = await response.json();
@@ -121,9 +128,7 @@ export class AuthService {
             const errorMessage = error.message || '';
             const apiErrors = [
                 'Username già esistente',
-                'Username, password ed email sono richiesti',
-                'Errore durante la registrazione',
-                'Errore del server'
+                'Username, password ed email sono richiesti'
             ];
 
             if (apiErrors.some(msg => errorMessage.includes(msg))) {

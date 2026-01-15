@@ -129,7 +129,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onLogin, onRegister, isLoa
                         disabled={isLoading}
                         className={`w-full py-3 rounded-xl font-medium transition-all shadow-lg ${isLoading
                             ? 'bg-stone-300 text-stone-500 cursor-not-allowed'
-                            : 'bg-[#6D4C41] text-white hover:bg-[#5D4037] active:scale-95 shadow-md'
+                            : 'bg-[#D4A017] text-white hover:bg-[#B98A12] active:scale-95 shadow-md'
                             }`}
                     >
                         {isLoading ? (
