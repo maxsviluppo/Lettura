@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 
 declare global {
   // Define AIStudio interface to resolve conflict with subsequent property declarations
@@ -20,4 +21,4 @@ declare global {
   // Removed var process redeclaration as it conflicts with existing Node.js types
 }
 
-export {};
+export { };

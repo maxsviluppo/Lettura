@@ -4,9 +4,8 @@ import { decode, decodeAudioData } from "../utils/audioUtils";
 
 export type VoiceSpeed = 'slow' | 'normal' | 'fast';
 
-// Chiave API Gemini Flash di base (generosa) - funziona senza configurazione
-// Gli utenti possono inserire la propria chiave personalizzata nelle impostazioni
-const DEFAULT_API_KEY = "AIzaSyDJakJIRdMYrkPHMFk0rVcBvOAp7KvMm9o"; // Chiave di base v2
+// Chiave API recuperata dalle variabili d'ambiente
+const DEFAULT_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY || "";
 
 export const generateStoryAudio = async (
   text: string,
@@ -14,8 +13,15 @@ export const generateStoryAudio = async (
   speed: VoiceSpeed = 'normal',
   apiKey?: string
 ): Promise<AudioBuffer | null> => {
-  // Usa la chiave personalizzata dell'utente, altrimenti la chiave di base
-  const key = apiKey || process.env.API_KEY || DEFAULT_API_KEY;
+  // Usa la chiave personalizzata dell'utente, o quella globale dalle env vars
+  // Supporta sia VITE_GOOGLE_API_KEY (standard Vite) che API_KEY (configurazione esistente)
+  const key = apiKey || DEFAULT_API_KEY || (process as any).env?.API_KEY;
+
+  if (!key) {
+    console.error("Gemini API Key mancante. Verifica le impostazioni o il file .env");
+    // Non lanciamo errore subito per permettere alla UI di gestire la cosa, 
+    // ma GoogleGenAI fallirà se la chiave è vuota.
+  }
 
   const ai = new GoogleGenAI({ apiKey: key });
 
@@ -67,8 +73,8 @@ export const generateStoryAudio = async (
 };
 
 export const transcribeAudio = async (base64Audio: string, apiKey?: string): Promise<string> => {
-  // Usa la chiave personalizzata dell'utente, altrimenti la chiave di base
-  const key = apiKey || process.env.API_KEY || DEFAULT_API_KEY;
+  // Usa la chiave personalizzata dell'utente, o quella globale dalle env vars
+  const key = apiKey || DEFAULT_API_KEY || (process as any).env?.API_KEY;
 
   const ai = new GoogleGenAI({ apiKey: key });
 
