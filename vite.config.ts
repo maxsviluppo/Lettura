@@ -7,6 +7,7 @@ export default defineConfig({
   define: {
     // Vite definisce queste costanti a tempo di compilazione.
     // Usiamo bracket notation su any per bypassare i limiti di tsc durante la build di Vercel.
-    'process.env.API_KEY': JSON.stringify((process as any).env.API_KEY)
+    'process.env.API_KEY': JSON.stringify((process as any).env.API_KEY),
+    'process.env.GEMINI_API_KEY': JSON.stringify((process as any).env.GEMINI_API_KEY)
   }
 });
