@@ -9,8 +9,8 @@ export const generateStoryAudio = async (
   audioContext: AudioContext, 
   speed: VoiceSpeed = 'normal'
 ): Promise<AudioBuffer | null> => {
-  // Use process.env.API_KEY directly as per guidelines
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Use process.env.GEMINI_API_KEY directly as per guidelines
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   
   let mood = "in modo dolce, pacato e rassicurante";
   if (speed === 'slow') {
@@ -23,7 +23,7 @@ export const generateStoryAudio = async (
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-preview-tts",
+      model: "gemini-3.1-flash-tts-preview",
       contents: [{ parts: [{ text: fullPrompt }] }],
       config: {
         responseModalities: [Modality.AUDIO],
@@ -60,8 +60,8 @@ export const generateStoryAudio = async (
 };
 
 export const transcribeAudio = async (base64Audio: string): Promise<string> => {
-  // Use process.env.API_KEY directly as per guidelines
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // Use process.env.GEMINI_API_KEY directly as per guidelines
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   
   try {
     const response = await ai.models.generateContent({
