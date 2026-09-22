@@ -12,6 +12,52 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [hasCustomKey, setHasCustomKey] = useState<boolean>(false);
+  const [apiKeyInput, setApiKeyInput] = useState<string>(() => localStorage.getItem('GEMINI_API_KEY') || '');
+  const [showKeyVisible, setShowKeyVisible] = useState<boolean>(false);
+  const [keySavedMessage, setKeySavedMessage] = useState<string | null>(null);
+  const [isTestingKey, setIsTestingKey] = useState<boolean>(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleSaveApiKey = () => {
+    const trimmed = apiKeyInput.trim();
+    if (!trimmed) {
+      localStorage.removeItem('GEMINI_API_KEY');
+      localStorage.removeItem('gemini_api_key');
+      setHasCustomKey(false);
+      setKeySavedMessage('Chiave rimossa.');
+    } else {
+      localStorage.setItem('GEMINI_API_KEY', trimmed);
+      setHasCustomKey(true);
+      setKeySavedMessage('✓ Chiave API salvata con successo!');
+      setError(null);
+    }
+    setTestResult(null);
+    setTimeout(() => setKeySavedMessage(null), 3000);
+  };
+
+  const handleTestApiKey = async () => {
+    const key = apiKeyInput.trim() || localStorage.getItem('GEMINI_API_KEY') || '';
+    if (!key) {
+      setTestResult({ success: false, message: 'Inserisci prima una chiave API da testare.' });
+      return;
+    }
+    setIsTestingKey(true);
+    setTestResult(null);
+    try {
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${key}`);
+      const data = await res.json();
+      if (res.ok) {
+        setTestResult({ success: true, message: '✓ Connessione riuscita! Chiave valida e funzionante su Google AI.' });
+      } else {
+        const msg = data.error?.message || `Errore Google (${res.status})`;
+        setTestResult({ success: false, message: `Errore: ${msg}` });
+      }
+    } catch (e: any) {
+      setTestResult({ success: false, message: `Errore di rete: ${e.message}` });
+    } finally {
+      setIsTestingKey(false);
+    }
+  };
   
   const audioContextRef = useRef<AudioContext | null>(null);
   const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
@@ -188,10 +234,12 @@ const App: React.FC = () => {
         setError('Non è stato possibile generare l\'audio. Prova a selezionare la tua chiave API nelle impostazioni.');
       }
     } catch (err: any) {
-      if (err.message === "API_KEY_ERROR") {
-        setError('Errore di autenticazione. Seleziona nuovamente la tua chiave API nelle impostazioni.');
+      if (err.message === "API_KEY_MISSING") {
+        setError('Manca la chiave API Gemini. Inseriscila nelle impostazioni (pulsante 🔑 in alto).');
+      } else if (err.message === "API_KEY_ERROR") {
+        setError('Errore di autenticazione: la chiave inserita non è valida o non ha i permessi su Google AI Studio. Aprila nelle impostazioni e premi "Testa Chiave" per verificare.');
       } else {
-        setError('Errore del server (500). Se persiste, prova a usare il tuo account Pro dalle impostazioni.');
+        setError(`Errore generazione audio: ${err.message || 'Errore del server'}. Riprova tra pochi istanti.`);
       }
       console.error(err);
     } finally {
@@ -219,21 +267,140 @@ const App: React.FC = () => {
               </button>
             </div>
             
-            <div className="space-y-8">
-              {/* API Section */}
+            <div className="space-y-8">              {/* API Section */}
               <section>
-                <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-4">Configurazione API</h3>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xs font-semibold text-stone-400 uppercase tracking-widest">Configurazione API</h3>
+                  <span className="text-[10px] font-mono text-stone-500 bg-stone-100 px-2 py-0.5 rounded font-bold">Gemini 3.8</span>
+                </div>
                 <div className="bg-stone-50 rounded-2xl p-5 border border-stone-100">
                   <p className="text-sm text-stone-500 mb-4 font-light leading-relaxed">
-                    Stato: {hasCustomKey ? <span className="text-green-600 font-medium">Account Pro Attivo</span> : <span className="text-stone-700 font-medium">Versione Gratuita</span>}.
+                    Stato: {hasCustomKey || localStorage.getItem('GEMINI_API_KEY') ? <span className="text-green-600 font-medium">Account Pro / API Key Attiva</span> : <span className="text-stone-700 font-medium">Chiave predefinita</span>}.
                   </p>
-                  <button
-                    onClick={handleOpenKeyDialog}
-                    className="w-full py-3 bg-stone-900 text-white rounded-xl font-medium hover:bg-stone-800 transition-all flex items-center justify-center gap-2 shadow-sm"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
-                    {hasCustomKey ? 'Cambia Chiave API' : 'Inserisci Chiave Pro'}
-                  </button>
+                  
+                  <div className="space-y-4">
+                    {/* Pulsante rapido per aprire il pannello API Key di Google AI Studio */}
+                    <a
+                      href="https://aistudio.google.com/app/apikey"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-3 bg-stone-900 text-white rounded-xl font-medium hover:bg-stone-800 transition-all flex items-center justify-center gap-2 shadow-sm text-sm group"
+                      title="Apri la console di Google AI Studio per creare o copiare la tua API Key"
+                    >
+                      <svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>
+                      <span>Apri Pannello API Key (Google AI Studio)</span>
+                      <svg className="w-4 h-4 text-stone-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                    </a>
+
+                    {window.aistudio && (
+                      <button
+                        onClick={handleOpenKeyDialog}
+                        className="w-full py-2.5 bg-stone-200 text-stone-700 rounded-xl font-medium hover:bg-stone-300 transition-all flex items-center justify-center gap-2 text-xs"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        <span>Seleziona tramite AI Studio Bridge</span>
+                      </button>
+                    )}
+
+                    <div className="relative">
+                      <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                        <div className="w-full border-t border-stone-200"></div>
+                      </div>
+                      <div className="relative flex justify-center">
+                        <span className="px-2 bg-stone-50 text-[10px] font-black uppercase tracking-widest text-stone-400">Inserimento Chiave</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="relative flex items-center">
+                        <input 
+                          type={showKeyVisible ? "text" : "password"}
+                          placeholder="Incolla qui la tua API Key Gemini..."
+                          value={apiKeyInput}
+                          onChange={(e) => {
+                            setApiKeyInput(e.target.value);
+                            setKeySavedMessage(null);
+                          }}
+                          className="w-full pl-4 pr-10 py-2.5 text-xs rounded-xl border border-stone-200 focus:ring-2 focus:ring-rose-200 outline-none transition-all font-mono"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowKeyVisible(!showKeyVisible)}
+                          className="absolute right-2.5 p-1 text-stone-400 hover:text-stone-600 transition-colors"
+                          title={showKeyVisible ? "Nascondi chiave" : "Mostra chiave"}
+                        >
+                          {showKeyVisible ? (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" /></svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                          )}
+                        </button>
+                      </div>
+
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={handleSaveApiKey}
+                          className="flex-1 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs font-medium transition-all shadow-sm flex items-center justify-center gap-1.5"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                          Salva Chiave
+                        </button>
+                        <button
+                          type="button"
+                          disabled={isTestingKey}
+                          onClick={handleTestApiKey}
+                          className="px-3 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-xl text-xs font-medium border border-stone-200 transition-all flex items-center gap-1 disabled:opacity-50"
+                          title="Testa validità della chiave su Google AI"
+                        >
+                          {isTestingKey ? (
+                            <svg className="animate-spin h-3.5 w-3.5 text-stone-600" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                          ) : (
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                          )}
+                          Testa
+                        </button>
+                        {apiKeyInput && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setApiKeyInput('');
+                              localStorage.removeItem('GEMINI_API_KEY');
+                              localStorage.removeItem('gemini_api_key');
+                              setHasCustomKey(false);
+                              setKeySavedMessage('Chiave rimossa.');
+                              setTestResult(null);
+                              setTimeout(() => setKeySavedMessage(null), 3000);
+                            }}
+                            className="px-3 py-2 bg-white hover:bg-stone-100 text-stone-500 rounded-xl text-xs font-medium border border-stone-200 transition-all"
+                            title="Rimuovi chiave salvata"
+                          >
+                            Rimuovi
+                          </button>
+                        )}
+                      </div>
+
+                      {keySavedMessage && (
+                        <p className={`text-xs text-center font-medium mt-1 ${keySavedMessage.includes('✓') ? 'text-green-600' : 'text-stone-500'}`}>
+                          {keySavedMessage}
+                        </p>
+                      )}
+
+                      {testResult && (
+                        <div className={`p-2.5 rounded-xl text-xs font-medium mt-1.5 border leading-relaxed ${
+                          testResult.success
+                            ? 'bg-green-50 text-green-700 border-green-200'
+                            : 'bg-rose-50 text-rose-700 border-rose-200'
+                        }`}>
+                          {testResult.message}
+                        </div>
+                      )}
+
+                      <p className="text-[9px] text-stone-400 px-1 leading-tight mt-1">
+                        La chiave viene salvata solo localmente nel tuo browser (localStorage).
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </section>
 
@@ -268,7 +435,16 @@ const App: React.FC = () => {
       )}
 
       <header className="w-full flex justify-between items-start mb-12">
-        <div className="invisible p-2">⚙️</div>
+        <button 
+          onClick={() => setShowSettings(true)}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 text-xs font-medium transition-all shadow-sm border border-stone-200/60"
+          title="Gestisci o inserisci API Key"
+        >
+          <span className="text-xs">🔑</span>
+          <span className="hidden sm:inline">
+            {hasCustomKey || localStorage.getItem('GEMINI_API_KEY') ? 'API Key Attiva' : 'Inserisci API Key'}
+          </span>
+        </button>
         <div className="text-center">
           <div className="inline-block p-3 bg-rose-100 rounded-full mb-4">
             <svg className="w-8 h-8 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -411,11 +587,22 @@ const App: React.FC = () => {
         </div>
       </main>
 
-      <footer className="mt-12 text-stone-400 text-sm text-center">
+      <footer className="mt-12 text-stone-400 text-sm text-center flex flex-col items-center gap-1.5">
         <p>© {new Date().getFullYear()} Dolce Voce Narrante</p>
-        <p className="mt-1">Progettato per momenti di relax e ascolto.</p>
-        {hasCustomKey && (
-          <p className="mt-2 text-[10px] text-green-500 font-medium">Account Pro Attivo</p>
+        <p>Progettato per momenti di relax e ascolto.</p>
+        <p className="text-xs text-stone-500 mt-1">
+          <a
+            href="https://codecafe.it"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-stone-700 hover:text-rose-500 font-medium transition-colors underline underline-offset-4"
+          >
+            codecafe.it
+          </a>{' '}
+          by Castro Massimo
+        </p>
+        {(hasCustomKey || localStorage.getItem('GEMINI_API_KEY')) && (
+          <p className="mt-1 text-[10px] text-green-600 font-medium">Account Pro / API Key Attiva</p>
         )}
       </footer>
     </div>
