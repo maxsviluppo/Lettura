@@ -14,9 +14,9 @@ export const getActiveApiKey = async (): Promise<string> => {
   }
 
   // 2. AIStudio bridge se disponibile
-  if (typeof window !== 'undefined' && window.aistudio?.getApiKey) {
+  if (typeof window !== 'undefined' && (window as any).aistudio?.getApiKey) {
     try {
-      const bridgeKey = await window.aistudio.getApiKey();
+      const bridgeKey = await (window as any).aistudio.getApiKey();
       if (bridgeKey && bridgeKey !== 'undefined') {
         return bridgeKey.trim();
       }
@@ -45,11 +45,16 @@ export const generateStoryAudio = async (
 
   const ai = new GoogleGenAI({ apiKey });
   
-  let mood = "in modo dolce, pacato e rassicurante";
+  let mood = "in modo fluido e chiaro, con un ritmo leggermente sostenuto";
   if (speed === 'slow') {
-    mood = "molto lentamente, con lunghe pause rilassanti";
-  } else if (speed === 'fast') {
+    // La nuova Lenta corrisponde alla ex-Normale (dolce, pacata e rassicurante)
+    mood = "in modo dolce, pacato e rassicurante";
+  } else if (speed === 'normal') {
+    // La nuova Normale corrisponde alla ex-Veloce (fluida e con ritmo leggermente sostenuto)
     mood = "in modo fluido e chiaro, con un ritmo leggermente sostenuto";
+  } else if (speed === 'fast') {
+    // La nuova Veloce è ancora più veloce e dinamica dell'attuale veloce
+    mood = "in modo brillante, chiaro e spedito, con un ritmo rapido, vivace e dinamico";
   }
 
   const fullPrompt = `Leggi questa storia con una voce femminile ${mood}: ${text}`;

@@ -91,7 +91,7 @@ const App: React.FC = () => {
 
   const initAudioContext = () => {
     if (!audioContextRef.current) {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
       audioContextRef.current = new AudioContextClass();
     }
     if (audioContextRef.current.state === 'suspended') {
@@ -211,7 +211,7 @@ const App: React.FC = () => {
         const source = audioContextRef.current!.createBufferSource();
         source.buffer = audioBuffer;
         
-        const playbackRates = { slow: 0.95, normal: 1.0, fast: 1.1 };
+        const playbackRates = { slow: 1.0, normal: 1.1, fast: 1.25 };
         const rate = playbackRates[speed];
         source.playbackRate.value = rate;
 
